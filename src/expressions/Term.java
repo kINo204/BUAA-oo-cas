@@ -195,32 +195,8 @@ public class Term implements Calc {
     }
 
     public boolean mergeWith(Term next) {
-        HashMap<String, Integer> varTable1 = new HashMap<>();
-        HashMap<String, Integer> varTable2 = new HashMap<>();
-        for (Factor factor : factors) {
-            if (factor.isBaseVar()) {
-                varTable1.put(
-                        factor.getBase().toString(),
-                        factor.getExp()
-                );
-            }
-        }
-        for (Factor factor : next.factors) {
-            if (factor.isBaseVar()) {
-                varTable2.put(
-                        factor.getBase().toString(),
-                        factor.getExp()
-                );
-            }
-        }
-        if (varTable1.isEmpty() && !varTable2.isEmpty()) {
+        if (mergePrep(next)) {
             return false;
-        }
-        for (String key : varTable1.keySet()) {
-            if (!varTable2.containsKey(key)
-                    || !varTable1.get(key).equals(varTable2.get(key))) {
-                return false;
-            }
         }
         for (Factor factor : factors) {
             if (factor.isBaseNum()) {
@@ -273,6 +249,37 @@ public class Term implements Calc {
         mergeOpt();
         stripFactors();
         return true;
+    }
+
+    private boolean mergePrep(Term next) {
+        HashMap<String, Integer> varTable1 = new HashMap<>();
+        HashMap<String, Integer> varTable2 = new HashMap<>();
+        for (Factor factor : factors) {
+            if (factor.isBaseVar()) {
+                varTable1.put(
+                        factor.getBase().toString(),
+                        factor.getExp()
+                );
+            }
+        }
+        for (Factor factor : next.factors) {
+            if (factor.isBaseVar()) {
+                varTable2.put(
+                        factor.getBase().toString(),
+                        factor.getExp()
+                );
+            }
+        }
+        if (varTable1.isEmpty() && !varTable2.isEmpty()) {
+            return true;
+        }
+        for (String key : varTable1.keySet()) {
+            if (!varTable2.containsKey(key)
+                    || !varTable1.get(key).equals(varTable2.get(key))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

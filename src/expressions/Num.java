@@ -25,6 +25,10 @@ public class Num implements Calc, Base {
         this.num = this.num.subtract(num);
     }
 
+    public void sub(Num num) {
+        this.num = this.num.subtract(num.num);
+    }
+
     public void mul(Num anum) {
         this.num = this.num.multiply(anum.num);
     }
@@ -42,9 +46,5 @@ public class Num implements Calc, Base {
     @Override
     public String toString() {
         return String.valueOf(num);
-    }
-
-    public void sub(Num num) {
-        this.num = this.num.subtract(num.num);
     }
 }

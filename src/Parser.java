@@ -1,7 +1,8 @@
+import expressions.Base;
 import expressions.Expr;
 import expressions.Factor;
 import expressions.Num;
-import expressions.OptPosNeg;
+import expressions.Operator;
 import expressions.Term;
 import expressions.Var;
 
@@ -25,90 +26,95 @@ public class Parser {
 
     private Term parseTerm() {
         Term term = new Term();
-
-        // Read the +/- before Term and store
-        // The first +/- sig when starting parse WILL BECOME TERM'S SIG. TODO
-        if (lexer.type() == Lexer.TokenType.ADD) {
-            term.setOptTerm(OptPosNeg.POS);
-            lexer.next();
-        } else if (lexer.type() == Lexer.TokenType.SUB) {
-            term.setOptTerm(OptPosNeg.NEG);
-            lexer.next();
-        } else {
-            // No operator -> positive
-            term.setOptTerm(OptPosNeg.POS);
-        }
-
-        // Read the +/- of ALL FACTORS OF A TERM and store
-        //
-        // May cause inconsistency with requirement here:
-        // the program accepts "+/-" before a var/(expr), while
-        // this isn't required.
-        if (lexer.type() == Lexer.TokenType.ADD) {
-            term.setOptFact(OptPosNeg.POS);
-            lexer.next();
-        } else if (lexer.type() == Lexer.TokenType.SUB) {
-            term.setOptFact(OptPosNeg.NEG);
-            lexer.next();
-        } else {
-            term.setOptFact(OptPosNeg.POS);
-        }
-
+        setOpt(term);
         term.addFactor(parseFactor());
         while (lexer.type() == Lexer.TokenType.MUL) {
             lexer.next(); // jump "*" token
             term.addFactor(parseFactor());
         }
-
         return term;
+    }
+
+    private void setOpt(Term term) {
+        // Read +/- before the Term.
+        switch (lexer.type()) {
+            case ADD:
+                term.setOptTerm(Operator.POS);
+                lexer.next();
+                break;
+            case SUB:
+                term.setOptTerm(Operator.NEG);
+                lexer.next();
+                break;
+            default: // No operator -> positive
+                term.setOptTerm(Operator.POS);
+                break;
+        }
+        // Read the +/- before ALL FACTORS OF A TERM and store
+        //
+        // May cause inconsistency with requirement here:
+        // the program accepts "+/-" before a var/(expr), while
+        // this isn't required.
+        switch (lexer.type()) {
+            case ADD:
+                term.setOptFact(Operator.POS);
+                lexer.next();
+                break;
+            case SUB:
+                term.setOptFact(Operator.NEG);
+                lexer.next();
+                break;
+            default: // No operator -> positive
+                term.setOptFact(Operator.POS);
+                break;
+        }
     }
 
     private Factor parseFactor() {
         Factor factor = new Factor();
 
         // Parse factor's base
-        if (lexer.peek().equals("(")) {
-            lexer.next();
+        if (lexer.peek().equals("(")) { // (expr) ^ expo
+            lexer.next(); // jump the "(" token
             factor.setBase(parseExpr());
-            lexer.next(); // TODO: check next() behavior here
-        } else if (lexer.type() == Lexer.TokenType.NUM) {
-            factor.setBase(new Num(lexer.peek()));
-            lexer.next();
-        } else if (lexer.type() == Lexer.TokenType.VAR) {
-            factor.setBase(new Var(lexer.peek()));
-            lexer.next();
-        } else if (
-                lexer.type() == Lexer.TokenType.ADD
-                || lexer.type() == Lexer.TokenType.SUB
-        ) {
-            StringBuilder sb = new StringBuilder();
-            sb.append(lexer.peek()); // append +/- of a base(must be int)
-            lexer.next();
-            assert lexer.type() == Lexer.TokenType.NUM;
-            sb.append(lexer.peek());
-            lexer.next();
-            factor.setBase(new Num(sb.toString()));
-        } else {
-            throw new IllegalArgumentException(
-                    "parseFactor(): Wrong Factor format"
-            );
+            lexer.next(); // jump the ")" token
+        } else { // non-expr ^ expo
+            factor.setBase(parseBase());
         }
 
-        // Parse factor's exp
-        //
-        // For now only numbers(int) are allowed for exp.
+        // Parse factor's exponent
         if (lexer.type() == Lexer.TokenType.EXP) {
-            lexer.next();
-            // NOTE: only add allowed here
+            lexer.next(); // jump the "^" token
+            // NOTE: only add allowed before exponent
             if (lexer.type() == Lexer.TokenType.ADD) {
                 lexer.next();
             }
-            factor.setExp(Integer.parseInt(lexer.peek()));
-            lexer.next();
+            factor.setExp(Integer.parseInt(lexer.next()));
         } else {
             factor.setExp(1); // No exp operator means "x ^ 1"
         }
 
         return factor;
+    }
+
+    private Base parseBase() {
+        switch (lexer.type()) {
+            case NUM:
+                return new Num(lexer.next());
+            case VAR:
+                return new Var(lexer.next());
+            case ADD:
+            case SUB:
+                StringBuilder sb = new StringBuilder();
+                sb.append(lexer.next()); // append +/- of a base(must be int)
+                // only int allowed for base after +/-
+                assert lexer.type() == Lexer.TokenType.NUM;
+                sb.append(lexer.next());
+                return new Num(sb.toString());
+            default:
+                throw new IllegalArgumentException(
+                        "parseFactor(): Wrong Factor format"
+                );
+        }
     }
 }

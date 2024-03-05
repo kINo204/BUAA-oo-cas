@@ -16,13 +16,13 @@ public class Expr implements Calc, Base {
 
         Iterator<Term> termIterator = terms.iterator();
         Term term = termIterator.next();
-        if (term.getOptTerm() == OptPosNeg.NEG) {
+        if (term.getOptTerm() == Operator.NEG) {
             sb.append("-");
         }
         sb.append(term);
         while (termIterator.hasNext()) {
             term = termIterator.next();
-            if (term.getOptTerm() == OptPosNeg.POS) {
+            if (term.getOptTerm() == Operator.POS) {
                 sb.append("+");
             } else { // neg
                 sb.append("-");
@@ -37,7 +37,7 @@ public class Expr implements Calc, Base {
     }
 
     public boolean simplify() {
-        // Call term simplify which will unfold braces
+        // Call term simplify
         while (true) {
             boolean unfolded = false;
             for (Term term : terms) {
@@ -48,12 +48,10 @@ public class Expr implements Calc, Base {
             }
             if (unfolded) {
                 break;
-            } // unfolding finishes here
-        }
+            }
+        } // unfolding finishes here
 
-        // Factors should have been simplified when reaching here.
-        // TODO: need refactor
-        // Add/sub factors:
+        // Merge terms
         HashSet<Term> checked = new HashSet<>();
         Term checking;
 
@@ -88,10 +86,10 @@ public class Expr implements Calc, Base {
     }
 
     @Override
-    public Calc cloneTree() {
+    public Calc cloneSubTree() {
         Expr expr = new Expr();
         for (Term term : terms) {
-            expr.addTerm((Term) term.cloneTree());
+            expr.addTerm((Term) term.cloneSubTree());
         }
         return expr;
     }
@@ -102,8 +100,10 @@ public class Expr implements Calc, Base {
 
     public void substituteTerm(Term substitutedTerm, HashSet<Term> srcTerms) {
         terms.addAll(srcTerms);
-        substitutedTerm.mergeOpt();
-        if (substitutedTerm.getOptTerm() == OptPosNeg.NEG) {
+        substitutedTerm.mergeOpt(); // TODO: DELETE THIS
+        if (substitutedTerm.getOptTerm() == Operator.NEG // TODO: DELETE THIS
+                /*substitutedTerm.getOptFact() != substitutedTerm.getOptTerm()*/ // TODO: OPEN THIS
+        ) {
             for (Term t : srcTerms) {
                 t.reverseOptTerm();
             }

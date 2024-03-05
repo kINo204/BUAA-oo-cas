@@ -37,15 +37,19 @@ public class Factor implements Calc {
     }
 
     public boolean simplify() {
+        // Exponent == 0:
         if (exp == 0) {
             exp = 1;
             base = new Num("1");
             return true;
-        } else if (base instanceof Expr) {
+        }
+
+        // Exponent != 0:
+        if (base instanceof Expr) {
             base.simplify();
         } else if (base instanceof Num) {
             if (exp > 1) {
-                Num ori = (Num) base.cloneTree();
+                Num ori = (Num) base.cloneSubTree();
                 for (int i = 0; i < exp - 1; i++) {
                     ((Num) base).mul(ori);
                 }
@@ -55,9 +59,9 @@ public class Factor implements Calc {
         return true; // TODO: the 2 return values seem useless
     }
 
-    public Calc cloneTree() {
+    public Calc cloneSubTree() {
         Factor factor = new Factor();
-        factor.setBase((Base) base.cloneTree());
+        factor.setBase((Base) base.cloneSubTree());
         factor.setExp(exp);
         return factor;
     }

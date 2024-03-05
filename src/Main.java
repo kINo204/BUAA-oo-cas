@@ -11,11 +11,8 @@ public class Main {
         Lexer lexer = new Lexer(input);
         Parser parser = new Parser(lexer);
         Expr expr = parser.parseExpr();
-
         expr.simplify();
 
         System.out.println(expr);
-
-        return;
     }
 }

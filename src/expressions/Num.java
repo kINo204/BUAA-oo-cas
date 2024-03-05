@@ -39,7 +39,7 @@ public class Num implements Calc, Base {
     }
 
     @Override
-    public Calc cloneTree() {
+    public Calc cloneSubTree() {
         return new Num(this.num);
     }
 

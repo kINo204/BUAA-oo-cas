@@ -13,7 +13,7 @@ public class Var implements Calc, Base {
     }
 
     @Override
-    public Base cloneTree() {
+    public Base cloneSubTree() {
         return new Var(this.var);
     }
 

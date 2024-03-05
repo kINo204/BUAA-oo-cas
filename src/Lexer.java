@@ -18,16 +18,18 @@ public class Lexer {
         return curToken;
     }
 
-    public void next() {
+    public String next() {
+        String prevToken = curToken;
+
         if (pos == input.length()) {
-            return;
+            return prevToken;
         }
 
         // skip blank chars
         while (input.charAt(pos) == ' ' || input.charAt(pos) == '\t') {
             pos++;
             if (pos == input.length()) {
-                return;
+                return prevToken;
             }
         }
 
@@ -61,6 +63,7 @@ public class Lexer {
             }
             pos++;
         }
+        return prevToken;
     }
 
     public TokenType type() {

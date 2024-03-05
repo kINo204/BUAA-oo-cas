@@ -7,18 +7,18 @@ import java.util.Iterator;
 
 public class Term implements Calc {
     private HashSet<Factor> factors;
-    private OptPosNeg optTerm;
+    private Operator optTerm;
 
-    private OptPosNeg optFact;
+    private Operator optFact;
 
     public Term() {
         factors = new HashSet<>();
-        optTerm = OptPosNeg.POS;
-        optFact = OptPosNeg.POS;
+        optTerm = Operator.POS;
+        optFact = Operator.POS;
     }
 
-    public void setOptTerm(OptPosNeg optPosNeg) {
-        this.optTerm = optPosNeg;
+    public void setOptTerm(Operator operator) {
+        this.optTerm = operator;
     }
 
     public void addFactor(Factor factor) {
@@ -40,9 +40,12 @@ public class Term implements Calc {
         } // Lower level simplification finishes here.
 
         // All "(Expr) ^ int" with int > 1 get duplicated:
-        dupBracedExpr();
+        dupExpr();
         // Unfold braces
         if (unfoldBracs(upperExpr)) {
+            // if successfully unfolded, the current Term will
+            // be replaced in the original Expr, so return and restart
+            // with updated Expr.terms
             return false;
         }
         multFactors();
@@ -51,42 +54,16 @@ public class Term implements Calc {
         return true;
     }
 
-    private boolean unfoldBracs(Expr upperExpr) {
-        // stripFactors();
-        for (Factor factor : factors) {
-            if (factor.isBaseExpr()) {
-                // get all other factors
-                HashSet<Factor> remain = new HashSet<>();
-                for (Factor factor1 : factors) {
-                    if (factor1 != factor) {
-                        remain.add((Factor) factor1.cloneTree());
-                    }
-                }
-                for (Term term : ((Expr) factor.getBase()).getTerms()) {
-                    // Add them to all lower level terms' factors:
-                    HashSet<Factor> tmp = new HashSet<>();
-                    for (Factor factor1 : remain) {
-                        tmp.add((Factor) factor1.cloneTree());
-                    }
-                    term.addFactor(tmp);
-                }
-                upperExpr.substituteTerm(this, ((Expr) factor.getBase()).getTerms());
-                return true;
-            }
-        } // All braces below this level have been unfolded.
-        return false;
-    }
-
-    private void dupBracedExpr() {
+    private void dupExpr() {
         while (true) {
-            boolean dupMotion = false; // TODO: is this init correct?
+            boolean dupMotion = false;
             for (Factor factor : factors) {
                 if (factor.isBaseExpr()) {
                     dupMotion = factor.getExp() > 1;
                     int exp = factor.getExp();
                     factor.setExp(1);
                     for (int i = 0; i < exp - 1; i++) {
-                        factors.add((Factor) factor.cloneTree());
+                        factors.add((Factor) factor.cloneSubTree());
                     }
                     if (dupMotion) {
                         break;
@@ -97,6 +74,57 @@ public class Term implements Calc {
                 break;
             }
         }
+    }
+
+    private boolean unfoldBracs(Expr upperExpr) {
+        // stripFactors();
+        for (Factor factor : factors) {
+            if (factor.isBaseExpr()) {
+                // get all other factors
+                HashSet<Factor> remain = new HashSet<>();
+                for (Factor f : factors) {
+                    if (f != factor) {
+                        remain.add((Factor) f.cloneSubTree());
+                    }
+                }
+                // Add them to all lower level terms' factors.
+                for (Term term : ((Expr) factor.getBase()).getTerms()) {
+                    // Create a cloned subtree for each term.
+                    HashSet<Factor> cloneOfRemain = new HashSet<>();
+                    for (Factor f : remain) {
+                        cloneOfRemain.add((Factor) f.cloneSubTree());
+                    }
+                    term.addFactor(cloneOfRemain);
+                }
+                upperExpr.substituteTerm(this, ((Expr) factor.getBase()).getTerms());
+                return true;
+            }
+        } // All braces below this level have been unfolded.
+        return false;
+    }
+
+    private void multFactors() {
+        // TODO: need refactor
+        // Multiply terms:
+        HashSet<Factor> checked = new HashSet<>();
+        Factor checking;
+
+        do {
+            Iterator<Factor> itr = factors.iterator();
+            checking = itr.next();
+            while (itr.hasNext() && checked.contains(checking)) {
+                checking = itr.next();
+            } // checking: the 1st unmerged term found
+
+            boolean merged = false;
+            while (itr.hasNext()) {
+                merged = checking.mergeWith(itr.next());
+                if (merged) {
+                    itr.remove();
+                }
+            }
+            checked.add(checking);
+        } while (checked.size() != factors.size());
     }
 
     private void stripFactors() {
@@ -128,30 +156,6 @@ public class Term implements Calc {
         }
     }
 
-    private void multFactors() {
-        // TODO: need refactor
-        // Multiply terms:
-        HashSet<Factor> checked = new HashSet<>();
-        Factor checking;
-
-        do {
-            Iterator<Factor> itr = factors.iterator();
-            checking = itr.next();
-            while (itr.hasNext() && checked.contains(checking)) {
-                checking = itr.next();
-            } // checking: the 1st unmerged term found
-
-            boolean merged = false;
-            while (itr.hasNext()) {
-                merged = checking.mergeWith(itr.next());
-                if (merged) {
-                    itr.remove();
-                }
-            }
-            checked.add(checking);
-        } while (checked.size() != factors.size());
-    }
-
     public void mergeOpt() {
         // Signal merge: num -> fact
         for (Factor f : factors) {
@@ -163,33 +167,33 @@ public class Term implements Calc {
             }
         }
         // Signal merge: fact -> term
-        if (optFact == OptPosNeg.NEG) {
+        if (optFact == Operator.NEG) {
             reverseOptFact();
             reverseOptTerm();
         }
     }
 
     private void reverseOptFact() {
-        if (optFact == OptPosNeg.POS) {
-            optFact = OptPosNeg.NEG;
+        if (optFact == Operator.POS) {
+            optFact = Operator.NEG;
         } else {
-            optFact = OptPosNeg.POS;
+            optFact = Operator.POS;
         }
     }
 
     public void reverseOptTerm() {
-        if (optTerm == OptPosNeg.POS) {
-            optTerm = OptPosNeg.NEG;
+        if (optTerm == Operator.POS) {
+            optTerm = Operator.NEG;
         } else {
-            optTerm = OptPosNeg.POS;
+            optTerm = Operator.POS;
         }
     }
 
-    public Calc cloneTree() {
+    public Calc cloneSubTree() {
         Term term = new Term();
         term.setOptTerm(optTerm);
         for (Factor factor : factors) {
-            term.addFactor((Factor) factor.cloneTree());
+            term.addFactor((Factor) factor.cloneSubTree());
         }
         return term;
     }
@@ -288,7 +292,7 @@ public class Term implements Calc {
 
         Iterator<Factor> factorIterator = factors.iterator();
         Factor factor = factorIterator.next();
-        if (optFact == OptPosNeg.NEG) {
+        if (optFact == Operator.NEG) {
             sb.append("-");
         }
         sb.append(factor);
@@ -300,15 +304,15 @@ public class Term implements Calc {
         return sb.toString();
     }
 
-    public OptPosNeg getOptTerm() {
+    public Operator getOptTerm() {
         return optTerm;
     }
 
-    public OptPosNeg getOptFact() {
+    public Operator getOptFact() {
         return optFact;
     }
 
-    public void setOptFact(OptPosNeg optPosNeg) {
-        optFact = optPosNeg;
+    public void setOptFact(Operator operator) {
+        optFact = operator;
     }
 }

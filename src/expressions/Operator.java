@@ -1,6 +1,6 @@
 package expressions;
 
-public enum OptPosNeg {
+public enum Operator {
     POS, NEG
 
 }

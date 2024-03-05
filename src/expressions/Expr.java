@@ -100,10 +100,7 @@ public class Expr implements Calc, Base {
 
     public void substituteTerm(Term substitutedTerm, HashSet<Term> srcTerms) {
         terms.addAll(srcTerms);
-        substitutedTerm.mergeOpt(); // TODO: DELETE THIS
-        if (substitutedTerm.getOptTerm() == Operator.NEG // TODO: DELETE THIS
-                /*substitutedTerm.getOptFact() != substitutedTerm.getOptTerm()*/ // TODO: OPEN THIS
-        ) {
+        if (substitutedTerm.getOptFact() != substitutedTerm.getOptTerm()) {
             for (Term t : srcTerms) {
                 t.reverseOptTerm();
             }

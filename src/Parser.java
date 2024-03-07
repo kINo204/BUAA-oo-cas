@@ -1,4 +1,5 @@
 import expressions.Base;
+import expressions.Exp;
 import expressions.Expr;
 import expressions.Factor;
 import expressions.Num;
@@ -83,15 +84,15 @@ public class Parser {
         }
 
         // Parse factor's exponent
-        if (lexer.type() == Lexer.TokenType.EXP) {
+        if (lexer.type() == Lexer.TokenType.IND) {
             lexer.next(); // jump the "^" token
             // NOTE: only add allowed before exponent
             if (lexer.type() == Lexer.TokenType.ADD) {
                 lexer.next();
             }
-            factor.setExp(Integer.parseInt(lexer.next()));
+            factor.setIndex(Integer.parseInt(lexer.next()));
         } else {
-            factor.setExp(1); // No exp operator means "x ^ 1"
+            factor.setIndex(1); // No exp operator means "x ^ 1"
         }
 
         return factor;
@@ -102,6 +103,16 @@ public class Parser {
             case NUM:
                 return new Num(lexer.next());
             case VAR:
+                // For Exp:
+                if (lexer.peek().equals("exp")) {
+                    lexer.next();
+                    lexer.next(); // jump "(" token after "exp"
+                    Expr expr = parseExpr();
+                    Exp exp = new Exp(expr);
+                    lexer.next(); // jump ")" token after "exp"
+                    return exp;
+                }
+                // For Var:
                 return new Var(lexer.next());
             case ADD:
             case SUB:

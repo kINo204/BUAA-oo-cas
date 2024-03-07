@@ -3,14 +3,14 @@ package expressions;
 public class Factor implements Calc {
 
     private Base base;
-    private int exp;
+    private int index;
 
     public void setBase(Base base) {
         this.base = base;
     }
 
-    public void setExp(int exp) {
-        this.exp = exp;
+    public void setIndex(int exp) {
+        this.index = exp;
     }
 
     @Override
@@ -28,9 +28,9 @@ public class Factor implements Calc {
         ) {
             sb.append(")");
         }
-        if (exp != 1) {
+        if (index != 1) {
             sb.append("^");
-            sb.append(exp);
+            sb.append(index);
         }
 
         return sb.toString();
@@ -38,22 +38,21 @@ public class Factor implements Calc {
 
     public boolean simplify() {
         // Exponent == 0:
-        if (exp == 0) {
-            exp = 1;
+        if (index == 0) {
+            index = 1;
             base = new Num("1");
             return true;
         }
 
         // Exponent != 0:
-        if (base instanceof Expr) {
-            base.simplify();
-        } else if (base instanceof Num) {
-            if (exp > 1) {
+        base.simplify(); // No operation for Num & Var
+        if (base instanceof Num) {
+            if (index > 1) {
                 Num ori = (Num) base.cloneSubTree();
-                for (int i = 0; i < exp - 1; i++) {
-                    ((Num) base).mul(ori);
+                for (int i = 0; i < index - 1; i++) {
+                    ((Num) base).mergeWith(ori);
                 }
-                exp = 1;
+                index = 1;
             }
         }
         return true; // TODO: the 2 return values seem useless
@@ -62,7 +61,7 @@ public class Factor implements Calc {
     public Calc cloneSubTree() {
         Factor factor = new Factor();
         factor.setBase((Base) base.cloneSubTree());
-        factor.setExp(exp);
+        factor.setIndex(index);
         return factor;
     }
 
@@ -78,29 +77,28 @@ public class Factor implements Calc {
         return base instanceof Num;
     }
 
-    public int getExp() {
-        return exp;
+    public int getIndex() {
+        return index;
     }
 
     public Base getBase() {
         return base;
     }
 
-    public boolean mergeWith(Factor next) {
+    public boolean multWith(Factor next) {
         assert !(next.base instanceof Expr);
-        assert exp == 1 && next.exp == 1;
-        if (base instanceof Num) {
-            if (next.base instanceof Var) {
-                return false;
-            }
-            ((Num) base).mul((Num) next.base);
-        } else if (base instanceof Var) {
-            if (next.base instanceof Num
-                    || !next.base.toString().equals(base.toString())) {
-                return false;
-            }
-            exp += next.exp;
+
+        boolean merged = base.mergeWith(next.base);
+        if (!merged) {
+            return false;
+        }
+        if (base instanceof Var) {
+            index += next.index;
         }
         return true;
+    }
+
+    public boolean isBaseExp() {
+        return base instanceof Exp;
     }
 }

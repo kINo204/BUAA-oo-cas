@@ -34,13 +34,11 @@ public class Term implements Calc {
     }
 
     public boolean simplify(Expr upperExpr) {
-        // Call factors to simplify
+        // Call factors' simplify
         for (Factor factor : factors) {
             factor.simplify();
-        } // Lower level simplification finishes here.
-
-        // All "(Expr) ^ int" with int > 1 get duplicated:
-        dupExpr();
+        }
+        dupExpr(); // All "(Expr) ^ int" or "exp() ^ int" with int > 1 get duplicated
         // Unfold braces
         if (unfoldBracs(upperExpr)) {
             // if successfully unfolded, the current Term will
@@ -49,8 +47,6 @@ public class Term implements Calc {
             return false;
         }
         multFactors();
-        stripFactors(); // Check for factor "+-1" or "0"
-        mergeOpt();
         return true;
     }
 
@@ -58,10 +54,10 @@ public class Term implements Calc {
         while (true) {
             boolean dupMotion = false;
             for (Factor factor : factors) {
-                if (factor.isBaseExpr()) {
-                    dupMotion = factor.getExp() > 1;
-                    int exp = factor.getExp();
-                    factor.setExp(1);
+                if (factor.isBaseExpr() || factor.isBaseExp()) {
+                    dupMotion = factor.getIndex() > 1;
+                    int exp = factor.getIndex();
+                    factor.setIndex(1);
                     for (int i = 0; i < exp - 1; i++) {
                         factors.add((Factor) factor.cloneSubTree());
                     }
@@ -118,13 +114,15 @@ public class Term implements Calc {
 
             boolean merged = false;
             while (itr.hasNext()) {
-                merged = checking.mergeWith(itr.next());
+                merged = checking.multWith(itr.next());
                 if (merged) {
                     itr.remove();
                 }
             }
             checked.add(checking);
         } while (checked.size() != factors.size());
+        stripFactors(); // Check for factor "+-1" or "0"
+        mergeOpt();
     }
 
     private void stripFactors() {
@@ -156,7 +154,7 @@ public class Term implements Calc {
         }
     }
 
-    public void mergeOpt() {
+    private void mergeOpt() {
         // Signal merge: num -> fact
         for (Factor f : factors) {
             if (f.isBaseNum() && f.getBase().toString().charAt(0) == '-') {
@@ -198,25 +196,26 @@ public class Term implements Calc {
         return term;
     }
 
-    public boolean mergeWith(Term next) {
-        if (mergePrep(next)) {
+    public boolean addUpWith(Term next) {
+        if (addUpPrep(next)) {
             return false;
         }
         for (Factor factor : factors) {
             if (factor.isBaseNum()) {
-                for (Factor factor1 : next.factors) {
-                    if (factor1.isBaseNum()) {
+                for (Factor f : next.factors) {
+                    if (f.isBaseNum()) {
                         // Both this and next have the num factor:
                         if (optTerm == next.optTerm) {
-                            ((Num) factor.getBase()).add((Num) factor1.getBase());
+                            ((Num) factor.getBase()).add((Num) f.getBase());
                         } else {
-                            ((Num) factor.getBase()).sub((Num) factor1.getBase());
+                            ((Num) factor.getBase()).sub((Num) f.getBase());
                         }
                         mergeOpt();
                         stripFactors();
                         return true;
                     }
                 }
+                // next has no num factor, but this has one:
                 if (optTerm == next.optTerm) {
                     ((Num) factor.getBase()).add(new Num("1"));
                 } else {
@@ -248,42 +247,46 @@ public class Term implements Calc {
         }
         Factor newFact = new Factor();
         newFact.setBase(num);
-        newFact.setExp(1);
+        newFact.setIndex(1);
         factors.add(newFact);
         mergeOpt();
         stripFactors();
         return true;
     }
 
-    private boolean mergePrep(Term next) {
-        HashMap<String, Integer> varTable1 = new HashMap<>();
-        HashMap<String, Integer> varTable2 = new HashMap<>();
+    private boolean addUpPrep(Term next) {
+        HashMap<Base, Integer> varTable1 = new HashMap<>();
+        HashMap<Base, Integer> varTable2 = new HashMap<>();
         for (Factor factor : factors) {
-            if (factor.isBaseVar()) {
+            if (!factor.isBaseNum()) {
                 varTable1.put(
-                        factor.getBase().toString(),
-                        factor.getExp()
+                        factor.getBase(), // TODO: Use .equals()?
+                        factor.getIndex()
                 );
             }
         }
         for (Factor factor : next.factors) {
-            if (factor.isBaseVar()) {
+            if (!factor.isBaseNum()) {
                 varTable2.put(
-                        factor.getBase().toString(),
-                        factor.getExp()
+                        factor.getBase(), // TODO: Use .equals()?
+                        factor.getIndex()
                 );
             }
         }
         if (varTable1.isEmpty() && !varTable2.isEmpty()) {
             return true;
         }
-        for (String key : varTable1.keySet()) {
+        for (Base key : varTable1.keySet()) {
             if (!varTable2.containsKey(key)
                     || !varTable1.get(key).equals(varTable2.get(key))) {
                 return true;
             }
         }
         return false;
+    }
+
+    public boolean singleFactor() {
+        return factors.size() == 1;
     }
 
     @Override

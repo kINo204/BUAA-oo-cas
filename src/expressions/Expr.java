@@ -36,8 +36,12 @@ public class Expr implements Calc, Base {
         terms.add(term);
     }
 
+    public void addTerm(HashSet<Term> terms) {
+        this.terms.addAll(terms);
+    }
+
     public boolean simplify() {
-        // Call term simplify
+        // Call terms' simplify
         while (true) {
             boolean unfolded = false;
             for (Term term : terms) {
@@ -51,6 +55,12 @@ public class Expr implements Calc, Base {
             }
         } // unfolding finishes here
 
+        addUpTerms(); // Add terms together
+        stripTerms(); // Delete term "0"
+        return true; // TODO: return value here seems useless
+    }
+
+    private void addUpTerms() {
         // Merge terms
         HashSet<Term> checked = new HashSet<>();
         Term checking;
@@ -64,14 +74,16 @@ public class Expr implements Calc, Base {
 
             boolean merged = false;
             while (itr.hasNext()) {
-                merged = checking.mergeWith(itr.next());
+                merged = checking.addUpWith(itr.next());
                 if (merged) {
                     itr.remove();
                 }
             }
             checked.add(checking);
         } while (checked.size() != terms.size());
+    }
 
+    private void stripTerms() {
         // Delete term "0"
         Iterator<Term> termIterator = terms.iterator();
         Term term;
@@ -81,8 +93,6 @@ public class Expr implements Calc, Base {
                 termIterator.remove();
             }
         }
-
-        return true; // TODO: return value here seems useless
     }
 
     @Override
@@ -106,5 +116,15 @@ public class Expr implements Calc, Base {
             }
         }
         terms.remove(substitutedTerm);
+    }
+
+    @Override
+    public boolean mergeWith(Base next) {
+        if (next instanceof Expr) {
+            terms.addAll(((Expr) next).terms);
+            addUpTerms();
+            return true;
+        }
+        return false;
     }
 }

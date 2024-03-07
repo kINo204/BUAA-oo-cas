@@ -21,4 +21,9 @@ public class Var implements Calc, Base {
     public String toString() {
         return var;
     }
+
+    @Override
+    public boolean mergeWith(Base next) {
+        return next instanceof Var && toString().equals(next.toString());
+    }
 }

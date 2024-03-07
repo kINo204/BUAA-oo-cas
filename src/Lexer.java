@@ -5,8 +5,15 @@ public class Lexer {
     private TokenType curType;
     private int pos = 0;
 
+    public void step(int length) {
+        final int tpos = pos;
+        do {
+            next();
+        } while (hasNext() && pos - tpos < length);
+    }
+
     public enum TokenType {
-        NUM, VAR, ADD, SUB, MUL, EXP, BRAC
+        NUM, VAR, ADD, SUB, MUL, IND, OTH, BRAC
     }
 
     public Lexer(String input) {
@@ -14,8 +21,23 @@ public class Lexer {
         next();
     }
 
+    public String rest() {
+        return input.substring(pos);
+    }
+
     public String peek() {
         return curToken;
+    }
+
+    public boolean hasNext() {
+        boolean nonBlank = false;
+        for (int i = pos; i < input.length(); i++) {
+            if (input.charAt(i) != ' ' && input.charAt(i) != '\t') {
+                nonBlank = true;
+                break;
+            }
+        }
+        return nonBlank;
     }
 
     public String next() {
@@ -57,9 +79,10 @@ public class Lexer {
                     curType = TokenType.BRAC;
                     break;
                 case '^':
-                    curType = TokenType.EXP;
+                    curType = TokenType.IND;
                     break;
                 default:
+                    curType = TokenType.OTH;
             }
             pos++;
         }

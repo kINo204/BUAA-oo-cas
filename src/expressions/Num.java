@@ -29,8 +29,13 @@ public class Num implements Calc, Base {
         this.num = this.num.subtract(num.num);
     }
 
-    public void mul(Num anum) {
-        this.num = this.num.multiply(anum.num);
+    @Override
+    public boolean mergeWith(Base next) {
+        if (next instanceof Num) {
+            this.num = this.num.multiply(((Num) next).num);
+            return true;
+        }
+        return false;
     }
 
     @Override // never used

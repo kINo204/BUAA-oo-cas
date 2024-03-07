@@ -40,6 +40,7 @@ public class Exp implements Calc, Base {
     public boolean mergeWith(Base next) {
         if (next instanceof Exp) {
             this.expr.mergeWith(((Exp) next).expr);
+            this.expr.simplify();
             return true;
         }
         return false;

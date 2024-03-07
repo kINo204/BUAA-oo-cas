@@ -30,7 +30,7 @@ public class PreProcessor {
         while (lexer.hasNext()) {
             if (functions.containsKey(lexer.peek())) { // function detected
                 sb.append(func1(lexer.peek(), lexer));
-                int bracs = 0;
+                /*int bracs = 0;
                 do {
                     lexer.next();
                     if (lexer.peek().equals("(")) {
@@ -38,7 +38,7 @@ public class PreProcessor {
                     } else if (lexer.peek().equals(")")) {
                         bracs--;
                     }
-                } while (bracs > 0);
+                } while (bracs > 0);*/
                 lexer.next();
             } else {
                 sb.append(lexer.next());
@@ -52,40 +52,16 @@ public class PreProcessor {
     }
 
     private String func1(String funcName, Lexer lexer) {
-        // Parse real parameters
-        Pattern pat = Pattern.compile("\\((([xyzfgh+\\-*^\\s()0-9]+,?)+)\\)");
-        Matcher mat = pat.matcher(lexer.rest());
-        boolean match = mat.find();
-        assert match;
+        StringBuilder funcSb = getFuncBody(lexer);
+
         ArrayList<String> realParams = new ArrayList<>();
+        getRealParams(funcSb, realParams);
 
-        int bracs = 0;
-        Lexer paramLexer = new Lexer(mat.group(1));
-        StringBuilder paramSb = new StringBuilder();
-        while (paramLexer.hasNext()) {
-            if (paramLexer.peek().equals("(")) {
-                bracs++;
-            } else if (paramLexer.peek().equals(")")) {
-                bracs--;
-            } else if (paramLexer.peek().equals(",")) {
-                if (bracs == 0) {
-                    realParams.add(paramSb.toString());
-                    paramSb.setLength(0);
-                    paramLexer.next();
-                    continue;
-                }
-            }
-            paramSb.append(paramLexer.next());
-        }
-        if (paramLexer.peek().equals("(")) {
-            bracs++;
-        } else if (paramLexer.peek().equals(")")) {
-            bracs--;
-        }
-        paramSb.append(paramLexer.next());
-        assert bracs == 0;
-        realParams.add(paramSb.toString());
+        StringBuilder sb = buildSubsFunc(funcName, realParams);
+        return sb.toString();
+    }
 
+    private StringBuilder buildSubsFunc(String funcName, ArrayList<String> realParams) {
         StringBuilder sb = new StringBuilder();
         Func func = functions.get(funcName);
         Lexer funcLexer = new Lexer(func.getDef());
@@ -112,7 +88,64 @@ public class PreProcessor {
             sb.append(funcLexer.next());
         }
         sb.append(")");
-        return sb.toString();
+        return sb;
+    }
+
+    private static void getRealParams(StringBuilder funcSb, ArrayList<String> realParams) {
+        int bracs2 = 0;
+        String func = funcSb.toString();
+        func = func.substring(1, func.length() - 1);
+        Lexer paramLexer = new Lexer(func);
+        StringBuilder paramSb = new StringBuilder();
+
+        while (paramLexer.hasNext()) {
+            if (paramLexer.peek().equals("(")) {
+                bracs2++;
+            } else if (paramLexer.peek().equals(")")) {
+                bracs2--;
+            } else if (paramLexer.peek().equals(",")) {
+                if (bracs2 == 0) {
+                    realParams.add(paramSb.toString());
+                    paramSb.setLength(0);
+                    paramLexer.next();
+                    continue;
+                }
+            }
+            paramSb.append(paramLexer.next());
+        }
+        if (paramLexer.peek().equals("(")) {
+            bracs2++;
+        } else if (paramLexer.peek().equals(")")) {
+            bracs2--;
+        }
+        paramSb.append(paramLexer.next());
+        assert bracs2 == 0;
+        realParams.add(paramSb.toString());
+    }
+
+    private static StringBuilder getFuncBody(Lexer lexer) {
+        // Parse real parameters
+        StringBuilder funcSb = new StringBuilder();
+        lexer.next();
+        int bracs1 = 0;
+        boolean flag = false;
+        while (lexer.hasNext()) {
+            if (lexer.peek().equals("(")) {
+                bracs1++;
+            } else if (lexer.peek().equals(")")) {
+                bracs1--;
+                if (bracs1 == 0) {
+                    funcSb.append(")");
+                    flag = true;
+                    break;
+                }
+            }
+            funcSb.append(lexer.next());
+        }
+        if (!flag) {
+            funcSb.append(lexer.peek());
+        }
+        return funcSb;
     }
 
 }

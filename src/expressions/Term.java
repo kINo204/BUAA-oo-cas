@@ -255,12 +255,12 @@ public class Term implements Calc {
     }
 
     private boolean addUpPrep(Term next) {
-        HashMap<Base, Integer> varTable1 = new HashMap<>();
-        HashMap<Base, Integer> varTable2 = new HashMap<>();
+        HashMap<String, Integer> varTable1 = new HashMap<>();
+        HashMap<String, Integer> varTable2 = new HashMap<>();
         for (Factor factor : factors) {
             if (!factor.isBaseNum()) {
                 varTable1.put(
-                        factor.getBase(), // TODO: Use .equals()?
+                        factor.getBase().toString(),
                         factor.getIndex()
                 );
             }
@@ -268,7 +268,7 @@ public class Term implements Calc {
         for (Factor factor : next.factors) {
             if (!factor.isBaseNum()) {
                 varTable2.put(
-                        factor.getBase(), // TODO: Use .equals()?
+                        factor.getBase().toString(),
                         factor.getIndex()
                 );
             }
@@ -276,7 +276,7 @@ public class Term implements Calc {
         if (varTable1.isEmpty() && !varTable2.isEmpty()) {
             return true;
         }
-        for (Base key : varTable1.keySet()) {
+        for (String key : varTable1.keySet()) {
             if (!varTable2.containsKey(key)
                     || !varTable1.get(key).equals(varTable2.get(key))) {
                 return true;

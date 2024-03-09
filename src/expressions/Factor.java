@@ -1,15 +1,17 @@
 package expressions;
 
+import java.math.BigInteger;
+
 public class Factor implements Calc {
 
     private Base base;
-    private int index;
+    private BigInteger index;
 
     public void setBase(Base base) {
         this.base = base;
     }
 
-    public void setIndex(int exp) {
+    public void setIndex(BigInteger exp) {
         this.index = exp;
     }
 
@@ -28,7 +30,7 @@ public class Factor implements Calc {
         ) {
             sb.append(")");
         }
-        if (index != 1) {
+        if (!index.equals(BigInteger.ONE)) {
             sb.append("^");
             sb.append(index);
         }
@@ -38,8 +40,8 @@ public class Factor implements Calc {
 
     public boolean simplify() {
         // Exponent == 0:
-        if (index == 0) {
-            index = 1;
+        if (index.equals(BigInteger.ZERO)) {
+            index = BigInteger.ONE;
             base = new Num("1");
             return true;
         }
@@ -47,12 +49,16 @@ public class Factor implements Calc {
         // Exponent != 0:
         base.simplify(); // No operation for Num & Var
         if (base instanceof Num) {
-            if (index > 1) {
+            if (index.compareTo(BigInteger.ONE) > 0) {
                 Num ori = (Num) base.cloneSubTree();
-                for (int i = 0; i < index - 1; i++) {
-                    ((Num) base).mergeWith(ori);
+                for (
+                    BigInteger i = BigInteger.ZERO;
+                    i.compareTo(index.subtract(BigInteger.ZERO)) < 0;
+                    i = i.add(BigInteger.ONE)
+                ) {
+                    base.mergeWith(ori);
                 }
-                index = 1;
+                index = BigInteger.ONE;
             }
         }
         return true; // TODO: the 2 return values seem useless
@@ -77,7 +83,7 @@ public class Factor implements Calc {
         return base instanceof Num;
     }
 
-    public int getIndex() {
+    public BigInteger getIndex() {
         return index;
     }
 
@@ -93,7 +99,7 @@ public class Factor implements Calc {
             return false;
         }
         if (base instanceof Var) {
-            index += next.index;
+            index = index.add(next.index);
         }
         return true;
     }

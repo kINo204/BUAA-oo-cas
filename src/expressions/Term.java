@@ -55,10 +55,14 @@ public class Term implements Calc {
             boolean dupMotion = false;
             for (Factor factor : factors) {
                 if (factor.isBaseExpr() || factor.isBaseExp()) {
-                    dupMotion = factor.getIndex() > 1;
-                    int exp = factor.getIndex();
-                    factor.setIndex(1);
-                    for (int i = 0; i < exp - 1; i++) {
+                    dupMotion = factor.getIndex().compareTo(BigInteger.ONE) > 0;
+                    BigInteger exp = factor.getIndex();
+                    factor.setIndex(BigInteger.ONE);
+                    for (
+                        BigInteger i = BigInteger.ZERO;
+                        i.compareTo(exp.subtract(BigInteger.ONE)) < 0;
+                        i = i.add(BigInteger.ONE)
+                    ) {
                         factors.add((Factor) factor.cloneSubTree());
                     }
                     if (dupMotion) {
@@ -247,7 +251,7 @@ public class Term implements Calc {
         }
         Factor newFact = new Factor();
         newFact.setBase(num);
-        newFact.setIndex(1);
+        newFact.setIndex(BigInteger.ONE);
         factors.add(newFact);
         mergeOpt();
         stripFactors();
@@ -255,8 +259,8 @@ public class Term implements Calc {
     }
 
     private boolean addUpPrep(Term next) {
-        HashMap<String, Integer> varTable1 = new HashMap<>();
-        HashMap<String, Integer> varTable2 = new HashMap<>();
+        HashMap<String, BigInteger> varTable1 = new HashMap<>();
+        HashMap<String, BigInteger> varTable2 = new HashMap<>();
         for (Factor factor : factors) {
             if (!factor.isBaseNum()) {
                 varTable1.put(
@@ -273,8 +277,8 @@ public class Term implements Calc {
                 );
             }
         }
-        if (varTable1.isEmpty() && !varTable2.isEmpty()) {
-            return true;
+        if (varTable1.size() != varTable2.size()) {
+            return true; // unmergable
         }
         for (String key : varTable1.keySet()) {
             if (!varTable2.containsKey(key)

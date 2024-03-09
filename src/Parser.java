@@ -7,6 +7,8 @@ import expressions.Operator;
 import expressions.Term;
 import expressions.Var;
 
+import java.math.BigInteger;
+
 public class Parser {
     private final Lexer lexer;
 
@@ -90,9 +92,9 @@ public class Parser {
             if (lexer.type() == Lexer.TokenType.ADD) {
                 lexer.next();
             }
-            factor.setIndex(Integer.parseInt(lexer.next()));
+            factor.setIndex(new BigInteger(lexer.next()));
         } else {
-            factor.setIndex(1); // No exp operator means "x ^ 1"
+            factor.setIndex(BigInteger.ONE); // No exp operator means "x ^ 1"
         }
 
         return factor;

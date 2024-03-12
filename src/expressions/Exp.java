@@ -21,14 +21,14 @@ public class Exp implements Calc, Base {
     @Override
     public String toString() {
         StringBuilder out = new StringBuilder("exp(");
-//        if (expr.getTerms().size() == 1) { // TODO: exp(-x) -> exp((-x))
-//            for (Term t : expr.getTerms()) { // only 1 term here
-//                if (t.singleFactor()) {
-//                    out.append(expr.toString()).append(")");
-//                    return out.toString();
-//                }
-//            }
-//        }
+        //        if (expr.getTerms().size() == 1) { // TODO: exp(-x) -> exp((-x))
+        //            for (Term t : expr.getTerms()) { // only 1 term here
+        //                if (t.singleFactor()) {
+        //                    out.append(expr.toString()).append(")");
+        //                    return out.toString();
+        //                }
+        //            }
+        //        }
         out.append("(");
         out.append(expr.toString()).append(")");
         out.append(")");

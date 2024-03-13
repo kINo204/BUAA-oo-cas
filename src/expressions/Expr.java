@@ -62,7 +62,7 @@ public class Expr implements Calc, Base {
 
         addUpTerms(); // Add terms together
         stripTerms(); // Delete term "0" TODO: del this?
-        return true; // TODO: return value here seems useless
+        return true;
     }
 
     private void addUpTerms() {

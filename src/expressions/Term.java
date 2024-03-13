@@ -47,8 +47,6 @@ public class Term implements Calc {
             factor.simplify();
         }
 
-        // dupExpr(); // All "(Expr) ^ int" or "exp() ^ int" with int > 1 get duplicated
-        // TODO: optimize!
         // Unfold braces
         if (unfoldBracs(upperExpr)) {
             // TODO: can this term create a new expression and use it? optimize?

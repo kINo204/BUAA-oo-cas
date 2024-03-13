@@ -1,5 +1,7 @@
 package expressions;
 
+import tool.Debuger;
+
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -41,6 +43,9 @@ public class Expr implements Calc, Base {
     }
 
     public boolean simplify() {
+        stripTerms(); // Delete term "0"
+
+        Debuger.println("E::simplify " + this);
         // Call terms' simplify
         while (true) {
             boolean unfolded = false;
@@ -56,7 +61,7 @@ public class Expr implements Calc, Base {
         } // unfolding finishes here
 
         addUpTerms(); // Add terms together
-        stripTerms(); // Delete term "0"
+        stripTerms(); // Delete term "0" TODO: del this?
         return true; // TODO: return value here seems useless
     }
 

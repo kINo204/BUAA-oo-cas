@@ -10,7 +10,7 @@ public class Num implements Calc, Base {
     }
 
     public Num(BigInteger num) {
-        this.num = num;
+        this.num = new BigInteger(num.toString());
     }
 
     public void add(Num num) {
@@ -45,7 +45,8 @@ public class Num implements Calc, Base {
 
     @Override
     public Calc cloneSubTree() {
-        return new Num(this.num);
+        BigInteger bigInteger = this.num;
+        return new Num(bigInteger);
     }
 
     @Override

@@ -1,5 +1,7 @@
 package expressions;
 
+import tool.Debuger;
+
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +17,10 @@ public class Term implements Calc {
         factors = new HashSet<>();
         optTerm = Operator.POS;
         optFact = Operator.POS;
+    }
+
+    public HashSet<Factor> getFactors() {
+        return factors;
     }
 
     public void setOptTerm(Operator operator) {
@@ -34,13 +40,18 @@ public class Term implements Calc {
     }
 
     public boolean simplify(Expr upperExpr) {
-        // Call factors' simplify
+        Debuger.println("T::simplify " + this);
+        this.stripFactors(); // optimize: reduce factors number before simplifying.
+
         for (Factor factor : factors) {
             factor.simplify();
         }
-        dupExpr(); // All "(Expr) ^ int" or "exp() ^ int" with int > 1 get duplicated
+
+        // dupExpr(); // All "(Expr) ^ int" or "exp() ^ int" with int > 1 get duplicated
+        // TODO: optimize!
         // Unfold braces
         if (unfoldBracs(upperExpr)) {
+            // TODO: can this term create a new expression and use it? optimize?
             // if successfully unfolded, the current Term will
             // be replaced in the original Expr, so return and restart
             // with updated Expr.terms
@@ -59,9 +70,9 @@ public class Term implements Calc {
                     BigInteger exp = factor.getIndex();
                     factor.setIndex(BigInteger.ONE);
                     for (
-                        BigInteger i = BigInteger.ZERO;
-                        i.compareTo(exp.subtract(BigInteger.ONE)) < 0;
-                        i = i.add(BigInteger.ONE)
+                        BigInteger i = BigInteger.ZERO;                 // i = 0;
+                        i.compareTo(exp.subtract(BigInteger.ONE)) < 0;  // i < exp - 1;
+                        i = i.add(BigInteger.ONE)                       // i++;
                     ) {
                         factors.add((Factor) factor.cloneSubTree());
                     }
@@ -103,30 +114,35 @@ public class Term implements Calc {
         return false;
     }
 
+    /*
+    multFactors() mult a Term's factors together to merge them.
+    The method deals with simple factor structures:
+        2 ^ 3
+        var ^ 9
+        exp(...)
+     */
     private void multFactors() {
-        // TODO: need refactor
-        // Multiply terms:
-        HashSet<Factor> checked = new HashSet<>();
+        HashSet<Factor> checkedFactors = new HashSet<>();
         Factor checking;
-
-        do {
+        while (checkedFactors.size() != factors.size()) {
             Iterator<Factor> itr = factors.iterator();
+            // checking = the 1st unmerged factor found
             checking = itr.next();
-            while (itr.hasNext() && checked.contains(checking)) {
+            while (itr.hasNext() && checkedFactors.contains(checking)) {
                 checking = itr.next();
-            } // checking: the 1st unmerged term found
-
-            boolean merged = false;
+            }
+            // Search for ALL factors able to mult with `checking` and mult.
+            // 2 * 4
             while (itr.hasNext()) {
-                merged = checking.multWith(itr.next());
-                if (merged) {
-                    itr.remove();
+                if (checking.multWith(itr.next())) {    // = 8 * 4
+                    itr.remove();                       // = 8
                 }
             }
-            checked.add(checking);
-        } while (checked.size() != factors.size());
-        stripFactors(); // Check for factor "+-1" or "0"
-        mergeOpt();
+            checkedFactors.add(checking);
+        }
+
+        this.stripFactors(); // TODO: del this?
+        this.mergeOpt();
     }
 
     private void stripFactors() {

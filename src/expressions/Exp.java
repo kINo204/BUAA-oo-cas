@@ -45,4 +45,12 @@ public class Exp implements Calc, Base {
         }
         return false;
     }
+
+    public Expr getExpr() {
+        return expr;
+    }
+
+    public void setExpr(Expr expr) {
+        this.expr = expr;
+    }
 }

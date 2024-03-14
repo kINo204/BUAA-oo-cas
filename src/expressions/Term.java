@@ -157,6 +157,15 @@ public class Term implements Calc {
                     && factors.size() > 1) {
                 reverseOptFact();
                 itr.remove();
+            } else if (factor.isBaseExp()
+                    && ((Exp) factor.getBase()).getExpr().toString().equals("0")) {
+                itr.remove();
+                if (factors.isEmpty()) {
+                    Factor f = new Factor();
+                    f.setBase(new Num("1"));
+                    f.setIndex(BigInteger.ONE);
+                    factors.add(f);
+                }
             } else if (factor.getBase().toString().equals("0")
                         && !factor.getIndex().equals(BigInteger.ZERO)) { // 0 * any = 0:
                 // Delete all other factors

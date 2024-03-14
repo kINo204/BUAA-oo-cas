@@ -29,14 +29,17 @@ public class Factor implements Calc {
         }
         Factor factor = (Factor) obj;
 
+        if (!this.index.equals(factor.index)) {
+            return false;
+        }
+
         assert !(base instanceof Expr);
         if (base instanceof Num) {
             assert index.equals(BigInteger.ONE);
             return this.base.equals(factor.base);
         } else if (base instanceof Var) {
             return
-                    this.base.equals(factor.base)
-                    && this.index.equals(factor.index);
+                    this.base.equals(factor.base);
         } else if (base instanceof Exp) {
             assert index.equals(BigInteger.ONE);
             return this.base.equals(factor.base);

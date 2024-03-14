@@ -41,6 +41,10 @@ public class Expr implements Calc, Base {
         }
         Expr expr = (Expr) obj;
 
+        if (this.terms.size() != expr.terms.size()) {
+            return false;
+        }
+
         HashSet<Term> unchecked = new HashSet<>(expr.terms);
         for (Term t1 : this.terms) {
             boolean match = false;

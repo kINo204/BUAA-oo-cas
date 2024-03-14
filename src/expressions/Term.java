@@ -157,13 +157,14 @@ public class Term implements Calc {
                     && factors.size() > 1) {
                 reverseOptFact();
                 itr.remove();
-            } else if (factor.getBase().toString().equals("0")) { // 0 * any = 0:
+            } else if (factor.getBase().toString().equals("0")
+                        && !factor.getIndex().equals(BigInteger.ZERO)) { // 0 * any = 0:
                 // Delete all other factors
                 Iterator<Factor> itr1 = factors.iterator();
                 Factor factor1;
                 while (itr1.hasNext()) {
                     factor1 = itr1.next();
-                    if (!factor1.getBase().toString().equals("0")) {
+                    if (factor1 != factor) {
                         itr1.remove();
                     }
                 }

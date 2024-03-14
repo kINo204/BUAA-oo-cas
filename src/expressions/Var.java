@@ -26,4 +26,13 @@ public class Var implements Calc, Base {
     public boolean mergeWith(Base next) {
         return next instanceof Var && toString().equals(next.toString());
     }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Var)) {
+            return false;
+        }
+        Var var = (Var) obj;
+        return this.var.equals(var.var);
+    }
 }

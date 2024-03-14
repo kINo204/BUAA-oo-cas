@@ -19,6 +19,31 @@ public class Factor implements Calc {
         this.index = exp;
     }
 
+    /*
+    equals() compare two SIMPLIFIED objects.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Factor)) {
+            return false;
+        }
+        Factor factor = (Factor) obj;
+
+        assert !(base instanceof Expr);
+        if (base instanceof Num) {
+            assert index.equals(BigInteger.ONE);
+            return this.base.equals(factor.base);
+        } else if (base instanceof Var) {
+            return
+                    this.base.equals(factor.base)
+                    && this.index.equals(factor.index);
+        } else if (base instanceof Exp) {
+            assert index.equals(BigInteger.ONE);
+            return this.base.equals(factor.base);
+        }
+        return false;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

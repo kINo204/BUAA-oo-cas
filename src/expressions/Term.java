@@ -273,12 +273,12 @@ public class Term implements Calc {
     }
 
     private boolean addUpPrep(Term next) {
-        HashMap<String, BigInteger> varTable1 = new HashMap<>();
-        HashMap<String, BigInteger> varTable2 = new HashMap<>();
+        HashMap<Base, BigInteger> varTable1 = new HashMap<>();
+        HashMap<Base, BigInteger> varTable2 = new HashMap<>();
         for (Factor factor : factors) {
             if (!factor.isBaseNum()) {
                 varTable1.put(
-                        factor.getBase().toString(),
+                        factor.getBase(),
                         factor.getIndex()
                 );
             }
@@ -286,7 +286,7 @@ public class Term implements Calc {
         for (Factor factor : next.factors) {
             if (!factor.isBaseNum()) {
                 varTable2.put(
-                        factor.getBase().toString(),
+                        factor.getBase(),
                         factor.getIndex()
                 );
             }
@@ -294,10 +294,22 @@ public class Term implements Calc {
         if (varTable1.size() != varTable2.size()) {
             return true; // unmergable
         }
-        for (String key : varTable1.keySet()) {
-            if (!varTable2.containsKey(key)
-                    || !varTable1.get(key).equals(varTable2.get(key))) {
-                return true;
+        HashSet<Base> unchecked = new HashSet<>(varTable2.keySet());
+        for (Base base1 : varTable1.keySet()) {
+            boolean match = false;
+            for (Base base2 : unchecked) {
+                if (base1.equals(base2)) {
+                    match = true;
+                    if (!(varTable1.get(base1).
+                            equals(varTable2.get(base2)))) {
+                        return true;
+                    }
+                    unchecked.remove(base2);
+                    break;
+                }
+            }
+            if (!match) {
+                return true; // a var not found
             }
         }
         return false;
@@ -323,6 +335,39 @@ public class Term implements Calc {
             sb.append(factor);
         }
         return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Term)) {
+            return false;
+        }
+        Term term = (Term) obj;
+
+        // Must be the same signal.
+        if ((this.optTerm == this.optFact) != (term.optTerm == term.optFact)) {
+            return false;
+        }
+        // Must be the same size.
+        if (this.factors.size() != term.factors.size()) {
+            return false;
+        }
+        // 1-1 compare between factors.
+        HashSet<Factor> unchecked = new HashSet<>(term.factors);
+        for (Factor f1 : this.factors) {
+            boolean match = false;
+            for (Factor f2 : unchecked) {
+                if (f1.equals(f2)) {
+                    match = true;
+                    unchecked.remove(f2);
+                    break;
+                }
+            }
+            if (!match) {
+                return false;
+            }
+        }
+        return true;
     }
 
     public Operator getOptTerm() {

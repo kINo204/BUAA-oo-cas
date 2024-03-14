@@ -50,6 +50,15 @@ public class Num implements Calc, Base {
     }
 
     @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Num)) {
+            return false;
+        }
+        Num num = (Num) obj;
+        return this.num.compareTo(num.num) == 0;
+    }
+
+    @Override
     public String toString() {
         return String.valueOf(num);
     }

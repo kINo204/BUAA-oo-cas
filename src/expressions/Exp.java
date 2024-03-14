@@ -33,7 +33,14 @@ public class Exp implements Calc, Base {
         out.append(expr.toString()).append(")");
         out.append(")");
         return out.toString();
+    }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Exp)) {
+            return false;
+        }
+        return this.expr.equals(((Exp) obj).expr);
     }
 
     @Override

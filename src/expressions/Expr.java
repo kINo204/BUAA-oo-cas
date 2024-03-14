@@ -34,6 +34,30 @@ public class Expr implements Calc, Base {
         return sb.toString();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Expr)) {
+            return false;
+        }
+        Expr expr = (Expr) obj;
+
+        HashSet<Term> unchecked = new HashSet<>(expr.terms);
+        for (Term t1 : this.terms) {
+            boolean match = false;
+            for (Term t2 : unchecked) {
+                if (t1.equals(t2)) {
+                    match = true;
+                    unchecked.remove(t2);
+                    break;
+                }
+            }
+            if (!match) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void addTerm(Term term) {
         terms.add(term);
     }

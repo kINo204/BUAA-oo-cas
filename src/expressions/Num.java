@@ -30,12 +30,17 @@ public class Num implements Calc, Base {
     }
 
     @Override
-    public boolean mergeWith(Base next) {
+    public boolean mergeWith(Calc next) {
         if (next instanceof Num) {
             this.num = this.num.multiply(((Num) next).num);
             return true;
         }
         return false;
+    }
+
+    @Override // unused
+    public Calc diff() {
+        return null;
     }
 
     @Override // never used

@@ -44,13 +44,18 @@ public class Exp implements Calc, Base {
     }
 
     @Override
-    public boolean mergeWith(Base next) {
+    public boolean mergeWith(Calc next) {
         if (next instanceof Exp) {
             this.expr.mergeWith(((Exp) next).expr);
             this.expr.simplify();
             return true;
         }
         return false;
+    }
+
+    @Override // unused
+    public Calc diff() {
+        return null;
     }
 
     public Expr getExpr() {

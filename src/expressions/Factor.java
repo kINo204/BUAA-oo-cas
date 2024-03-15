@@ -11,6 +11,14 @@ public class Factor implements Calc {
     private Base base;
     private BigInteger index;
 
+    public Factor() {
+    }
+
+    public Factor(Base b, BigInteger ind) {
+        base = b;
+        index = ind;
+    }
+
     public void setBase(Base base) {
         this.base = base;
     }
@@ -79,16 +87,22 @@ public class Factor implements Calc {
             return true;
         }
         // Exponent >= 1:
-        base.simplify();
-        if (index.compareTo(BigInteger.ONE) > 0) { // expo > 1
-            if (base instanceof Num) { // Calculate "num ^ expo" if expo > 1
+        // Simplify base.
+        if (base instanceof Diff) {
+            ((Diff) base).simplify(this); // Diff change to Expr here
+        } else {
+            base.simplify();
+        }
+        // Deal with index.
+        if (index.compareTo(BigInteger.ONE) > 0) { // ind > 1
+            if (base instanceof Num) { // Calculate "num ^ ind" if ind > 1
                 Num ori = (Num) base.cloneSubTree();
                 for (
                     BigInteger i = BigInteger.ZERO;                     // i == 0;
                     i.compareTo(index.subtract(BigInteger.ONE)) < 0;    // i < index - 1;
                     i = i.add(BigInteger.ONE)                           // i++;
                 ) {
-                    base.mergeWith(ori);                                // base *= ori_base;
+                    base.mergeWith(ori);                                // base(num) *= ori_base;
                 }
                 index = BigInteger.ONE;                                 // index = 1;
             } else { // If base is a complex structure
@@ -101,6 +115,44 @@ public class Factor implements Calc {
 
         }
         return true; // TODO: the 2 return values seem useless
+    }
+
+    @Override
+    public boolean mergeWith(Calc next) { //TODO
+        return false;
+    }
+
+    /**
+     * @return a Term of the current factor's diff.
+     */
+    @Override
+    public Calc diff() {
+        // Must have been simplified before diff.
+        assert !(base instanceof Expr);
+        assert !(base instanceof Diff);
+        // Perform diff for various types of factors:
+        Term term = new Term();
+        if (base instanceof Num) {
+            // dx(num) = 0
+            Factor factor = new Factor(new Num("0"), BigInteger.ONE);
+            term.addFactor(factor);
+        } else if (base instanceof Var) {
+            // dx(x ^ a) = a * x ^ (a - 1)
+            Factor factor1 = new Factor(new Num(this.index), BigInteger.ONE);
+            term.addFactor(factor1); // a
+            Factor factor2 = (Factor) this.cloneSubTree();
+            if (factor2.index.compareTo(BigInteger.ONE) > 0) { // x ^ (a - 1) (ONLY when a > 1)
+                factor2.index = factor2.index.subtract(BigInteger.ONE);
+                term.addFactor(factor2);
+            }
+        } else if (base instanceof Exp) {
+            // dx(exp(expr)) = exp(expr) * dx(expr)
+            term.addFactor((Factor) this.cloneSubTree());
+            term.addFactor(new Factor(
+                    (Base) ((Exp) base.cloneSubTree()).getExpr().diff(), BigInteger.ONE
+                    ));
+        }
+        return term;
     }
 
     private void powExpr() {
@@ -230,8 +282,9 @@ public class Factor implements Calc {
         return base;
     }
 
-    public boolean multWith(Factor next) {
+    public boolean multWith(Factor next) { //TODO doc
         assert !(next.base instanceof Expr);
+        assert !(next.base instanceof Diff);
 
         boolean merged = base.mergeWith(next.base);
         if (!merged) {

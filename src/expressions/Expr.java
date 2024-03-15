@@ -93,6 +93,9 @@ public class Expr implements Calc, Base {
         return true;
     }
 
+    /**
+     * Note: terms must have been simplified before this method!
+     */
     private void addUpTerms() {
         // Merge terms
         HashSet<Term> checked = new HashSet<>();
@@ -152,12 +155,24 @@ public class Expr implements Calc, Base {
     }
 
     @Override
-    public boolean mergeWith(Base next) {
-        if (next instanceof Expr) {
-            terms.addAll(((Expr) next).terms);
-            addUpTerms();
-            return true;
+    public boolean mergeWith(Calc next) {
+        if (!(next instanceof Expr)) {
+            return false;
         }
-        return false;
+        terms.addAll(((Expr) next).terms);
+        return true;
+    }
+
+    /**
+     * @return the current expressions' diff expression.
+     */
+    @Override
+    public Calc diff() {
+        Expr expr = new Expr();
+        for (Term term : terms) {
+            // Diff each term and add them together to form a new Expr.
+            expr.mergeWith(term.diff());
+        }
+        return expr;
     }
 }

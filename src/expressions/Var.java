@@ -23,8 +23,13 @@ public class Var implements Calc, Base {
     }
 
     @Override
-    public boolean mergeWith(Base next) {
+    public boolean mergeWith(Calc next) {
         return next instanceof Var && toString().equals(next.toString());
+    }
+
+    @Override // unused
+    public Calc diff() {
+        return null;
     }
 
     @Override

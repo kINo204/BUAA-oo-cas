@@ -1,11 +1,4 @@
-import expressions.Base;
-import expressions.Exp;
-import expressions.Expr;
-import expressions.Factor;
-import expressions.Num;
-import expressions.Operator;
-import expressions.Term;
-import expressions.Var;
+import expressions.*;
 
 import java.math.BigInteger;
 
@@ -107,12 +100,19 @@ public class Parser {
             case VAR:
                 // For Exp:
                 if (lexer.peek().equals("exp")) {
-                    lexer.next();
-                    lexer.next(); // jump "(" token after "exp"
+                    lexer.next(); // jump TO the "(" token
+                    lexer.next(); // jump OVER the "(" token
                     Expr expr = parseExpr();
                     Exp exp = new Exp(expr);
-                    lexer.next(); // jump ")" token after "exp"
+                    lexer.next(); // jump ")" token
                     return exp;
+                } else if (lexer.peek().equals("dx")) { // For diff:
+                    lexer.next(); // jump TO the "(" token
+                    lexer.next(); // jump OVER the "(" token
+                    Expr expr = parseExpr();
+                    Diff diff = new Diff(expr);
+                    lexer.next(); // jump ")" token
+                    return diff;
                 }
                 // For Var:
                 return new Var(lexer.next());

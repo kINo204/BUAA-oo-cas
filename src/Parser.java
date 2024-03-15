@@ -1,4 +1,12 @@
-import expressions.*;
+import expressions.Base;
+import expressions.Diff;
+import expressions.Exp;
+import expressions.Expr;
+import expressions.Factor;
+import expressions.Num;
+import expressions.Operator;
+import expressions.Term;
+import expressions.Var;
 
 import java.math.BigInteger;
 

@@ -1,3 +1,4 @@
+import expressions.Calc;
 import expressions.Expr;
 
 import java.util.Scanner;
@@ -25,7 +26,7 @@ public class Main {
         // Parsing and Simplification
         Lexer lexer = new Lexer(input);
         Parser parser = new Parser(lexer);
-        Expr expr = parser.parseExpr();
+        Calc expr = parser.parseExpr();
         expr.simplify();
 
         System.out.println(expr);
